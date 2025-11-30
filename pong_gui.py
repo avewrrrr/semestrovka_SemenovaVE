@@ -68,20 +68,6 @@ class GameWidget(QtWidgets.QWidget):
                 f"Win: {st['win_score']}"
             )
 
-        qp.setFont(QtGui.QFont("Arial", 12))
-        qp.setPen(QtGui.QColor(200,200,200))
-        left_name = self.nicks[0] if len(self.nicks) > 0 else "Player0"
-        right_name = self.nicks[1] if len(self.nicks) > 1 else "Player1"
-        try:
-            qp.drawText(x0, 10, left_name)
-            qp.drawText(x1, 10, right_name)
-            qp.setPen(QtGui.QColor("#ff66b2"))
-            qp.setFont(QtGui.QFont("Arial", 20, QtGui.QFont.Weight.Bold))
-            win_text = f"До {st['win_score']}"
-            qp.drawText(self.rect(), QtCore.Qt.AlignmentFlag.AlignTop | QtCore.Qt.AlignmentFlag.AlignHCenter, win_text)
-        except:
-            pass
-
 class MsgEmitter(QtCore.QObject):
     msg = QtCore.pyqtSignal(dict)
 
@@ -185,13 +171,16 @@ class MainWindow(QtWidgets.QWidget):
         lbl_controls = QtWidgets.QLabel("setting:")
         lbl_controls.setFont(QtGui.QFont("Arial", 14))
         right.addWidget(lbl_controls)
+        self.lbl_my_name = QtWidgets.QLabel("you: unknown")
+        self.lbl_my_name.setFont(QtGui.QFont("Arial", 12))
+        right.addWidget(self.lbl_my_name)
 
         form = QtWidgets.QFormLayout()
         self.room_name_edit = QtWidgets.QLineEdit()
         self.win_edit = QtWidgets.QLineEdit()
         self.win_edit.setFixedWidth(80)
         self.win_edit.setText("10")
-        form.addRow("ROOMS NAME", self.room_name_edit)
+        form.addRow("ROOM NAME", self.room_name_edit)
         form.addRow("win score:", self.win_edit)
         right.addLayout(form)
 
@@ -322,6 +311,8 @@ class MainWindow(QtWidgets.QWidget):
             self.input_nick.setEnabled(False)
             QtWidgets.QMessageBox.information(self, "ОК", f"set {m.get('name')}")
 
+            self.lbl_my_name.setText(f"you nick: {m.get('name')}")
+
             QtCore.QTimer.singleShot(0, lambda: self.stacked.setCurrentIndex(1))
             QtCore.QTimer.singleShot(0, lambda: self.resize(1000, 640))
             self.setFixedSize(QtCore.QSize())
@@ -359,6 +350,7 @@ class MainWindow(QtWidgets.QWidget):
             self.game_widget.state = st
             if st.get("playing", False):
                 self.stacked.setCurrentIndex(2)
+            self.game_widget.nicks = m.get("nicks", [])
             self.game_widget.update()
             return
 
