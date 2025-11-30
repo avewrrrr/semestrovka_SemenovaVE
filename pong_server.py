@@ -17,10 +17,11 @@ def send_json(conn, obj):
         raise
 
 class Room:
-    def __init__(self, name, win_score=10):
+    def __init__(self, name, win_score=10, server=None):
         self.name = name
         self.clients = []
         self.inputs = {}
+        self.server = server
         self.state = GameState()
         self.running = False
         self.win_score = win_score
@@ -74,7 +75,17 @@ class Room:
                 time.sleep(sleep_t)
 
     def broadcast_state(self):
-        msg = {"type": "STATE", "state": self.state.to_dict(), "room": self.name}
+        nicks = ['']
+        if self.server is not None:
+            for conn, index in self.clients:
+                name = self.server.client_names.get(conn)
+                if name is None:
+                    name =  f"player{index + 1}"
+                nicks.append(name)
+        else:
+            for conn, index in self.clients:
+                nicks.append(f"player{index + 1}")
+        msg = {"type": "STATE", "state": self.state.to_dict(), "room": self.name, "nicks": nicks}
         for conn, lol in list(self.clients):
             try:
                 send_json(conn, msg)
@@ -210,7 +221,8 @@ class PongServer:
                             win_value = 10
                         win_value = max(1, min(99, win_value))
 
-                        self.rooms[name] = Room(name, win_value)
+                        self.rooms[name] = Room(name, win_value, self)
+
                         print(f"[server core] {name} create # winscore {win_value}")
 
                         send_json(conn, {"type": "CREATED", "room": name})
