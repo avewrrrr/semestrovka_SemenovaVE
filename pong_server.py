@@ -212,7 +212,7 @@ class PongServer:
                             continue
 
                         if name in self.rooms:
-                            send_json(conn, {"type": "ERROR", "message": "room exists"})
+                            send_json(conn, {"type": "ERROR", "message": "room done"})
                             continue
 
                         try:
